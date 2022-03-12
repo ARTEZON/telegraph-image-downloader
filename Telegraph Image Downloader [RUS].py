@@ -344,7 +344,7 @@ def main():
 
         if metadataPath:
             with open(metadataPath, 'w', encoding='UTF-8') as metadata:
-                metadata.write(f"""Скачано с помощью Telegram Image Downloader от ARTEZON
+                metadata.write(f"""Скачано с помощью Telegraph Image Downloader от ARTEZON
 
 Источник: {url}
 
