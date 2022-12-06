@@ -1,7 +1,8 @@
 # Telegraph Image Downloader
-# Author: ARTEZON (vk.com/artez0n)
+# Author: ARTEZON
+# Github: https://github.com/ARTEZON
 #
-# Version 1.2.1
+# Version 1.2.2
 #
 # --------------------------------------------------
 # -= SETTINGS =-
@@ -26,11 +27,10 @@ timeout = 5
 # --------------------------------------------------
 
 from subprocess import check_call, DEVNULL, STDOUT
-from os import system, remove, rename, startfile
+from os import system, remove, rename, startfile, _exit
 from re import search, split, sub
 from pathlib import Path as path
 from traceback import format_exc
-from urllib import request
 from sys import executable
 from msvcrt import getch
 from time import sleep
@@ -59,7 +59,7 @@ except ModuleNotFoundError:
 
 def getHTML():
     print('''
----===( Telegraph Image Downloader v1.2.1 by ARTEZON )===---
+---===( Telegraph Image Downloader v1.2.2 by ARTEZON )===---
 
 To download pictures from one article,
 copy the URL and paste it into this window
@@ -101,7 +101,7 @@ Then save the file. When everything is ready, press Enter.
                 print('Please try again.')
                 break
             try:
-                html = list(str(bs(request.urlopen(url).read(), features='html.parser')).split('\n'))
+                html = list(str(bs(requests.get(url).text, features='html.parser')).split('\n'))
                 htmlList.append([url, html])
             except:
                 print('[Error] Couldn\'t open this URL:', url)
@@ -130,7 +130,7 @@ def print_percent(last_percent=-1):
     global this_successful, this_failed, this_skipped, this_count
     global stop
     while not stop:
-        percent = int((this_successful + this_skipped) / this_count * 100)
+        percent = int((this_successful + this_skipped) / this_count * 100) if this_count != 0 else 100
         if not stop and percent != 100:
             if this_failed == 0: print(f'     Downloading... {percent}%', end='\r', flush=True)
             else: print(f'     Downloading... {percent}% (error(s) occured)', end='\r', flush=True)
@@ -373,6 +373,9 @@ while True:
         main()
         print('\nPress any key to continue.')
         getch()
+    except KeyboardInterrupt:
+        print('Program was terminated by user.')
+        _exit(0)
     except:
         path('Downloads').mkdir(exist_ok=True)
         open('Downloads/error_log.txt', 'w').write(format_exc())
