@@ -1,7 +1,8 @@
 # Telegraph Image Downloader
-# Автор: ARTEZON (vk.com/artez0n)
+# Автор: ARTEZON
+# Github: https://github.com/ARTEZON
 #
-# Версия 1.2.1
+# Версия 1.2.2
 #
 # --------------------------------------------------
 # -= НАСТРОЙКИ =-
@@ -26,11 +27,10 @@ timeout = 5
 # --------------------------------------------------
 
 from subprocess import check_call, DEVNULL, STDOUT
-from os import system, remove, rename, startfile
+from os import system, remove, rename, startfile, _exit
 from re import search, split, sub
 from pathlib import Path as path
 from traceback import format_exc
-from urllib import request
 from sys import executable
 from msvcrt import getch
 from time import sleep
@@ -59,7 +59,7 @@ except ModuleNotFoundError:
 
 def getHTML():
     print('''
----===( Telegraph Image Downloader v1.2.1 от ARTEZON )===---
+---===( Telegraph Image Downloader v1.2.2 от ARTEZON )===---
 
 Чтобы скачать картинки из одной статьи,
 скопируй ссылку и вставь её в это окно
@@ -82,7 +82,7 @@ def getHTML():
         else:
             open("Ссылки.txt", 'a')
             print('Проверяю ссылки...')
-            urls = [line.rstrip('\n') for line in open('Ссылки.txt')]
+            urls = [line.rstrip('\n') for line in open('Ссылки.txt', encoding='UTF-8')]
         i = 0
         if not urls:
             print('[Ошибка] Нет ссылок')
@@ -101,7 +101,7 @@ def getHTML():
                 print('Попробуй ещё раз.')
                 break
             try:
-                html = list(str(bs(request.urlopen(url).read(), features='html.parser')).split('\n'))
+                html = list(str(bs(requests.get(url).text, features='html.parser')).split('\n'))
                 htmlList.append([url, html])
             except:
                 print('[Ошибка] Не удалось открыть URL:', url)
@@ -130,7 +130,7 @@ def print_percent(last_percent=-1):
     global this_successful, this_failed, this_skipped, this_count
     global stop
     while not stop:
-        percent = int((this_successful + this_skipped) / this_count * 100)
+        percent = int((this_successful + this_skipped) / this_count * 100) if this_count != 0 else 100
         if not stop and percent != 100:
             if this_failed == 0: print(f'     Скачивание... {percent}%', end='\r', flush=True)
             else: print(f'     Скачивание... {percent}% (есть ошибки)', end='\r', flush=True)
@@ -373,9 +373,12 @@ while True:
         main()
         print('\nДля продолжения нажми любую клавишу.')
         getch()
+    except KeyboardInterrupt:
+        print('Программа была завершена пользователем.')
+        _exit(0)
     except:
         path('Загрузки').mkdir(exist_ok=True)
-        open('Загрузки/error_log.txt', 'w').write(format_exc())
+        open('Загрузки/error_log.txt', 'w', encoding='UTF-8').write(format_exc())
         print('Произошла непредвиденная ошибка. Отправь содержимое файла "Загрузки\\error_log.txt" разработчику.')
         startfile('Загрузки\\error_log.txt')
         getch()
