@@ -21,4 +21,4 @@ Python скрипт для автоматического скачивания �
 - Windows 10 and newer (for .exe application)
 
 ## Troubleshooting
-- If you're on Linux and you have `UnicodeEncodeError`, [please read this](https://github.com/ARTEZON/telegraph-image-downloader/issues/2#issuecomment-1345519587).
+- If you're on Linux and you get `UnicodeEncodeError`, [please read this](https://github.com/ARTEZON/telegraph-image-downloader/issues/2#issuecomment-1345519587).
