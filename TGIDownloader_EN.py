@@ -2,7 +2,7 @@
 # Author: ARTEZON
 # Github: https://github.com/ARTEZON
 #
-# Version 1.2.3
+# Version 1.2.4
 #
 # --------------------------------------------------
 # -= SETTINGS =-
@@ -70,7 +70,7 @@ except ModuleNotFoundError:
 
 def getHTML():
     print('''
----===( Telegraph Image Downloader v1.2.3 by ARTEZON )===---
+---===( Telegraph Image Downloader v1.2.4 by ARTEZON )===---
 
 To download pictures from one article,
 copy the URL and paste it into this window
@@ -290,11 +290,18 @@ def main():
         if 'telegra.ph/' in url and url != 'https://telegra.ph/':
             for line in html:
                 if '<article' in line:
-                    title = unescape(re.search('<article class="tl_article_content" id="_tl_editor"><h1>(.*)<br/></h1>', line).group(1))
+                    regex_title = re.search('<article class="tl_article_content" id="_tl_editor"><h1>(.*)<br/></h1>', line)
+                    if isinstance(regex_title, re.Match):
+                        title = unescape(regex_title.group(1))
+                    else:
+                        title = ""
                     print(f'\nArticle {htmlNumber} of {len(htmlList)}: {title}')
                     folderName = validName(title)
-                    description = re.search('</h1><address>(.*)<br/></address>', line).group(1)
-                    description = unescape(re.sub('<[^>]+>', '', description))
+                    regex_description = re.search('</h1><address>(.*)<br/></address>', line)
+                    if isinstance(regex_description, re.Match):
+                        description = unescape(re.sub('<[^>]+>', '', regex_description.group(1)))
+                    else:
+                        description = ""
                     data = re.split('<|>', line)
                     if metadataLocation == 1:
                         metadataPath = f'Downloads/{folderName}.txt'
@@ -307,10 +314,12 @@ def main():
                     else: metadataPath = False
                     for item in data:
                         if 'img src=' in item:
-                            if 'img src="/' in item:
-                                imgs.append('https://telegra.ph' + re.search('img src="(.*)"', item).group(1))
-                            else:
-                                imgs.append(re.search('img src="(.*)"', item).group(1))
+                            try:
+                                if 'img src="/' in item:
+                                    imgs.append('https://telegra.ph' + re.search('img src="(.*)"', item).group(1))
+                                else:
+                                    imgs.append(re.search('img src="(.*)"', item).group(1))
+                            except Exception: pass
                     break
             else:
                 print(f'\nArticle {htmlNumber} of {len(htmlList)}: This article doesn\'t exist')
@@ -321,7 +330,11 @@ def main():
             for line in html:
                 if '<title>' in line:
                     try:
-                        title = unescape(re.search('<title>(.*) — Teletype</title>', line).group(1))
+                        regex_title = re.search('<title>(.*) — Teletype</title>', line)
+                        if isinstance(regex_title, re.Match):
+                            title = unescape(regex_title.group(1))
+                        else:
+                            title = ''
                         description = ''
                         teletype_article_found = True
                         break
@@ -346,16 +359,18 @@ def main():
                         else: metadataPath = False
                         for item in data:
                             if 'img' in item and 'src=' in item and 'version' not in item:
-                                if 'src="/' in item:
-                                    if 'width' in item:
-                                        imgs.append('https://teletype.in' + re.search('src="(.*)" width', item).group(1))
+                                try:
+                                    if 'src="/' in item:
+                                        if 'width' in item:
+                                            imgs.append('https://teletype.in' + re.search('src="(.*)" width', item).group(1))
+                                        else:
+                                            imgs.append('https://teletype.in' + re.search('src="(.*)"', item).group(1))
                                     else:
-                                        imgs.append('https://teletype.in' + re.search('src="(.*)"', item).group(1))
-                                else:
-                                    if 'width' in item:
-                                        imgs.append(re.search('src="(.*)" width', item).group(1))
-                                    else:
-                                        imgs.append(re.search('src="(.*)"', item).group(1))
+                                        if 'width' in item:
+                                            imgs.append(re.search('src="(.*)" width', item).group(1))
+                                        else:
+                                            imgs.append(re.search('src="(.*)"', item).group(1))
+                                except Exception: pass
                         break
                 else:
                     print(f'\nArticle {htmlNumber} of {len(htmlList)}: The article does not exist or does not contain images')
