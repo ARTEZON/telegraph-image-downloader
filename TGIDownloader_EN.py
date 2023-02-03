@@ -38,7 +38,6 @@ from html import unescape
 from time import sleep
 import threading
 import mimetypes
-import imghdr
 import re
 import os
 
@@ -155,7 +154,23 @@ def validName(name):
     return name
 
 
-def print_percent(last_percent=-1):
+def guessImageType(content):
+    if content[6:10] in (b'JFIF', b'Exif'):
+        return 'jpg'
+    if content.startswith(b'\211PNG\r\n\032\n'):
+        return 'png'
+    if content[:6] in (b'GIF87a', b'GIF89a'):
+        return 'gif'
+    if content[:2] in (b'MM', b'II'):
+        return 'tiff'
+    if content.startswith(b'BM'):
+        return 'bmp'
+    if content.startswith(b'RIFF') and h[8:12] == b'WEBP':
+        return 'webp'
+    return 'unknown'
+
+
+def printPercentage(last_percent=-1):
     global this_successful, this_failed, this_skipped, this_count
     global stop
     while not stop:
@@ -198,7 +213,7 @@ def download(imgNumber, imgUrl):
                 errorCode = 'Connection failed or timed out. If source image site is blocked in your country, enable VPN and run the script again'
                 success = False
                 raise ValueError()
-            extension = imghdr.what(file=None, h=temp_imgData.content)
+            extension = guessImageType(temp_imgData.content)
         
         retries = 0
         timedOutError = False
@@ -400,7 +415,7 @@ In the first case, just run the script again. Otherwise, you should send the "er
 
             this_count = len(imgs)
             stop = False
-            threading.Thread(target=print_percent).start()
+            threading.Thread(target=printPercentage).start()
 
             imgNumber = 0
             for imgUrl in imgs:
@@ -451,7 +466,7 @@ while True:
         main()
         print('\nPress Enter to continue.')
         wait_for_enter_key('')
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, EOFError):
         print('\nProgram was terminated by user.')
         os._exit(0)
     except:
