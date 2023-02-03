@@ -129,7 +129,7 @@ Then save the file. When everything is ready, press Enter.
                 print('Please try again.\n')
                 break
             try:
-                html = list(str(bs(requests.get(url).text, features='html.parser')).split('\n'))
+                html = list(str(bs(requests.get(url).content.decode(), features='html.parser')).split('\n'))
                 htmlList.append([url, html])
             except Exception as e:
                 print('[Error] Couldn\'t open this URL:', url)

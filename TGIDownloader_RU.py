@@ -129,7 +129,7 @@ def getHTML():
                 print('Попробуйте ещё раз.\n')
                 break
             try:
-                html = list(str(bs(requests.get(url).text, features='html.parser')).split('\n'))
+                html = list(str(bs(requests.get(url).content.decode(), features='html.parser')).split('\n'))
                 htmlList.append([url, html])
             except Exception as e:
                 print('[Ошибка] Не удалось открыть URL:', url)
@@ -295,7 +295,7 @@ def main():
                         title = unescape(regex_title.group(1))
                     else:
                         title = ""
-                    print(f'\nArticle {htmlNumber} of {len(htmlList)}: {title}')
+                    print(f'\nСтатья {htmlNumber} из {len(htmlList)}: {title}')
                     folderName = validName(title)
                     regex_description = re.search('</h1><address>(.*)<br/></address>', line)
                     if isinstance(regex_description, re.Match):
@@ -345,7 +345,7 @@ def main():
             if teletype_article_found:
                 for line in html:
                     if '<noscript><img' in line:
-                        print(f'\nArticle {htmlNumber} of {len(htmlList)}: {title}')
+                        print(f'\nСтатья {htmlNumber} из {len(htmlList)}: {title}')
                         folderName = validName(title)
                         data = re.split('<|>', line)
                         if metadataLocation == 1:
