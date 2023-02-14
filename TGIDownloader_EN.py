@@ -28,6 +28,10 @@ timeout = 10
 # Default: 3
 retry = 3
 # --------------------------------------------------
+# Proxy url (str)
+# Default: None
+proxy = None
+# --------------------------------------------------
 
 from subprocess import call, check_call, DEVNULL, STDOUT
 from getpass import getpass as wait_for_enter_key
@@ -64,7 +68,15 @@ except ModuleNotFoundError:
                 print(f'     {module}')
             print('\nPress Enter to try again.')
             wait_for_enter_key('')
-        
+
+
+def get_proxy_obj():
+    return (
+        {
+           'http': proxy,
+           'https': proxy,
+        } if proxy else None
+    )
 
 
 def getHTML():
@@ -128,7 +140,7 @@ Then save the file. When everything is ready, press Enter.
                 print('Please try again.\n')
                 break
             try:
-                html = list(str(bs(requests.get(url).content.decode(), features='html.parser')).split('\n'))
+                html = list(str(bs(requests.get(url, proxies=get_proxy_obj()).content.decode(), features='html.parser')).split('\n'))
                 htmlList.append([url, html])
             except Exception as e:
                 print('[Error] Couldn\'t open this URL:', url)
@@ -198,7 +210,7 @@ def download(imgNumber, imgUrl):
         else:
             while True:
                 try:
-                    temp_imgData = requests.get(imgUrl, timeout=timeout)
+                    temp_imgData = requests.get(imgUrl, timeout=timeout, proxies=get_proxy_obj())
                     retries = 0
                 except Exception as e:
                     if retries > retry:
@@ -226,7 +238,7 @@ def download(imgNumber, imgUrl):
         except FileNotFoundError:
             while True:
                 try:
-                    if not temp_imgData: imgData = requests.get(imgUrl, timeout=timeout)
+                    if not temp_imgData: imgData = requests.get(imgUrl, timeout=timeout, proxies=get_proxy_obj())
                     else: imgData = temp_imgData
                     retries = 0
                 except:
