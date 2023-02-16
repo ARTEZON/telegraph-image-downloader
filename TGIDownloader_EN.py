@@ -2,12 +2,12 @@
 # Author: ARTEZON
 # Github: https://github.com/ARTEZON
 #
-# Version 1.2.4
+# Version 1.2.5
 #
 # --------------------------------------------------
 # -= SETTINGS =-
 # --------------------------------------------------
-# Language (string) # not implemented
+# Language (str) # not implemented
 # language = 'ENG'
 # --------------------------------------------------
 # Metadata save location (int)
@@ -28,10 +28,11 @@ timeout = 10
 # Default: 3
 retry = 3
 # --------------------------------------------------
-# Proxy url (str)
+# Proxy address (str)
 # Default: None
 proxy = None
 # --------------------------------------------------
+
 
 from subprocess import call, check_call, DEVNULL, STDOUT
 from getpass import getpass as wait_for_enter_key
@@ -81,7 +82,7 @@ def get_proxy_obj():
 
 def getHTML():
     print('''
----===( Telegraph Image Downloader v1.2.4 by ARTEZON )===---
+---===( Telegraph Image Downloader v1.2.5 by ARTEZON )===---
 
 To download pictures from one article,
 copy the URL and paste it into this window
@@ -100,7 +101,9 @@ Then save the file. When everything is ready, press Enter.
             try:
                 open("Links.txt", 'a')
             except:
-                print('[Error] Can\'t create the Links.txt file.\nCreate it manually and/or adjust permissions.\n')
+                print('[Error] Can\'t create the Links.txt file.\nCreate it manually and/or set permissions.\n')
+                print('\nPress Enter to try again.')
+                wait_for_enter_key('')
                 continue
         inp = input()
         if inp:
@@ -111,7 +114,9 @@ Then save the file. When everything is ready, press Enter.
                 try:
                     open("Links.txt", 'a')
                 except:
-                    print('[Error] Can\'t create the Links.txt file.\nCreate it manually and/or adjust permissions.\n')
+                    print('[Error] Can\'t create the Links.txt file.\nCreate it manually and/or set permissions.\n')
+                    print('\nPress Enter to try again.')
+                    wait_for_enter_key('')
                     continue
             print('Checking the URLs...')
             try:
@@ -119,9 +124,13 @@ Then save the file. When everything is ready, press Enter.
             except UnicodeDecodeError:
                 print('[Error] Can\'t read the Links.txt file because its encoding is not supported.')
                 print('Please, save your file in Unicode (UTF-8) and try again.\n')
+                print('\nPress Enter to try again.')
+                wait_for_enter_key('')
                 continue
             except:
                 print('[Error] Can\'t open the Links.txt file.\nMake sure you have read permissions.\n')
+                print('\nPress Enter to try again.')
+                wait_for_enter_key('')
                 continue
         i = 0
         if not urls:
@@ -222,7 +231,7 @@ def download(imgNumber, imgUrl):
                 break
             if timedOutError:
                 timedOutError = False
-                errorCode = 'Connection failed or timed out. If source image site is blocked in your country, enable VPN and run the script again'
+                errorCode = 'Connection failed or timed out. If source image site is blocked in your country, set proxy or enable VPN, and run the script again'
                 success = False
                 raise ValueError()
             extension = guessImageType(temp_imgData.content)
@@ -251,18 +260,21 @@ def download(imgNumber, imgUrl):
                 break
             if timedOutError:
                 timedOutError = False
-                errorCode = 'Connection failed or timed out. If source image site is blocked in your country, enable VPN and run the script again'
+                errorCode = 'Connection failed or timed out. If source image site is blocked in your country, set proxy or enable VPN, and run the script again'
                 success = False
             else:
                 if imgData.status_code == 200:
                     if b'html' not in imgData.content:
-                        open(f'Downloads/{folderName}/{imgNumber:03d}.{extension}', 'wb').write(imgData.content)
+                        try:
+                            open(f'Downloads/{folderName}/{imgNumber:03d}.{extension}', 'wb').write(imgData.content)
+                        except Exception:
+                            errorCode = 'Can\'t save image to \'{}\' file'.format(os.path.abspath(f'Downloads/{folderName}/{imgNumber:03d}.{extension}'))
                         success = True
                     else:
                         errorCode = 'Wrong file type has been received from the server'
                         success = False
                 else:
-                    errorCode = f"HTTP status code: {imgData.status_code}"
+                    errorCode = f'HTTP status code: {imgData.status_code}'
                     success = False
             
             if success:
@@ -332,13 +344,17 @@ def main():
                     data = re.split('<|>', line)
                     if metadataLocation == 1:
                         metadataPath = f'Downloads/{folderName}.txt'
-                        try: os.remove(f'Downloads/{folderName} [ERROR].txt')
-                        except OSError: pass
+                        metadataPathError = f'Downloads/{folderName} [ERROR].txt'
+                        if os.path.isfile(metadataPathError):
+                            try: os.remove(metadataPathError)
+                            except OSError: pass
                     elif metadataLocation == 2:
                         metadataPath = f'Downloads/{folderName}/[Metadata].txt'
-                        try: os.remove(f'Downloads/{folderName}/[Metadata] [ERROR].txt')
-                        except OSError: pass
-                    else: metadataPath = False
+                        metadataPathError = f'Downloads/{folderName}/[Metadata] [ERROR].txt'
+                        if os.path.isfile(metadataPathError):
+                            try: os.remove(metadataPathError)
+                            except OSError: pass
+                    else: metadataPath = None
                     for item in data:
                         if 'img src=' in item:
                             try:
@@ -377,13 +393,17 @@ def main():
                         data = re.split('<|>', line)
                         if metadataLocation == 1:
                             metadataPath = f'Downloads/{folderName}.txt'
-                            try: os.remove(f'Downloads/{folderName} [ERROR].txt')
-                            except OSError: pass
+                            metadataPathError = f'Downloads/{folderName} [ERROR].txt'
+                            if os.path.isfile(metadataPathError):
+                                try: os.remove(metadataPathError)
+                                except OSError: pass
                         elif metadataLocation == 2:
                             metadataPath = f'Downloads/{folderName}/[Metadata].txt'
-                            try: os.remove(f'Downloads/{folderName}/[Metadata] [ERROR].txt')
-                            except OSError: pass
-                        else: metadataPath = False
+                            metadataPathError = f'Downloads/{folderName}/[Metadata] [ERROR].txt'
+                            if os.path.isfile(metadataPathError):
+                                try: os.remove(metadataPathError)
+                                except OSError: pass
+                        else: metadataPath = None
                         for item in data:
                             if 'img' in item and 'src=' in item and 'version' not in item:
                                 try:
@@ -409,7 +429,10 @@ def main():
             continue
 
         if (len(imgs)) > 0:
-            path('Downloads/' + folderName).mkdir(parents=True, exist_ok=True)
+            try:
+                path('Downloads/' + folderName).mkdir(parents=True, exist_ok=True)
+            except Exception:
+                print('Can\'t create/open \'{}\' directory'.format(os.path.abspath('Downloads/' + folderName)))
 
             try:
                 if metadataPath:
@@ -443,9 +466,10 @@ In the first case, just run the script again. Otherwise, you should send the "er
             
             print(f'     {this_successful} images were downloaded, {this_failed} failed, {this_skipped} skipped.')
 
-            if metadataPath:
-                with open(metadataPath, 'w', encoding='utf-8') as metadata:
-                    metadata.write(f"""Downloaded using Telegraph Image Downloader by ARTEZON
+            try:
+                if metadataPath:
+                    with open(metadataPath, 'w', encoding='utf-8') as metadata:
+                        metadata.write(f"""Downloaded using Telegraph Image Downloader by ARTEZON
 
 Source: {url}
 
@@ -454,16 +478,23 @@ Title: {title}
 Description: {description}
 
 Number of images: {len(imgs)}""")
+            except:
+                print('[Error] Can\'t write metadata.')
+                return
 
                 if failedList:
-                    print("     " + errorCode)
-                    with open(metadataPath, 'a', encoding='utf-8') as metadata:
-                        metadata.write('\n\nThe following images have not been downloaded:')
-                        for i in failedList:
-                            metadata.write('\n' + str(i))
-                        metadata.write('\nDownload them manually or try running the script again.')
-                    if metadataLocation == 1: os.rename(f'Downloads/{folderName}.txt', f'Downloads/{folderName} [ERROR].txt')
-                    elif metadataLocation == 2: os.rename(f'Downloads/{folderName}/[Metadata].txt', f'Downloads/{folderName}/[Metadata] [ERROR].txt')
+                    print("     Last error: " + errorCode)
+                    try:
+                        if metadataPath:
+                            with open(metadataPath, 'a', encoding='utf-8') as metadata:
+                                metadata.write('\n\nThe following images have not been downloaded:')
+                                for i in failedList:
+                                    metadata.write('\n' + str(i))
+                                metadata.write('\nDownload them manually or try running the script again.')
+                            os.rename(metadataPath, metadataPathError)
+                    except:
+                        print('[Error] Can\'t write metadata.')
+                        return
         else:
             print('     No images!')
 
@@ -472,6 +503,11 @@ Number of images: {len(imgs)}""")
 
 if platform == 'win32':
     os.system('title Telegraph Image Downloader')
+    if os.getcwd().lower() == os.path.join('C:', os.sep, 'Windows', 'system32').lower():
+        print('Please run the program from another directory.')
+        print('\nPress Enter to exit.')
+        wait_for_enter_key('')
+        os._exit(0)
 while True:
     try:
         os.system('cls' if platform == 'win32' else 'clear')

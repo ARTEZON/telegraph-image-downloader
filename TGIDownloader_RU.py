@@ -2,12 +2,12 @@
 # Автор: ARTEZON
 # Github: https://github.com/ARTEZON
 #
-# Версия 1.2.4
+# Версия 1.2.5
 #
 # --------------------------------------------------
 # -= НАСТРОЙКИ =-
 # --------------------------------------------------
-# Язык (string) # не реализовано
+# Язык (str) # не реализовано
 # language = 'RUS'
 # --------------------------------------------------
 # Где сохранять метаданные (int)
@@ -28,6 +28,11 @@ timeout = 10
 # По умолчанию: 3
 retry = 3
 # --------------------------------------------------
+# Адрес прокси-сервера (str)
+# По умолчанию: None
+proxy = None
+# --------------------------------------------------
+
 
 from subprocess import call, check_call, DEVNULL, STDOUT
 from getpass import getpass as wait_for_enter_key
@@ -64,12 +69,20 @@ except ModuleNotFoundError:
                 print(f'     {module}')
             print('\nНажмите Enter, чтобы повторить попытку.')
             wait_for_enter_key('')
-        
+
+
+def get_proxy_obj():
+    return (
+        {
+           'http': proxy,
+           'https': proxy,
+        } if proxy else None
+    )
 
 
 def getHTML():
     print('''
----===( Telegraph Image Downloader v1.2.4 от ARTEZON )===---
+---===( Telegraph Image Downloader v1.2.5 от ARTEZON )===---
 
 Чтобы скачать картинки из одной статьи,
 скопируйте ссылку, вставьте её в это окно
@@ -88,7 +101,9 @@ def getHTML():
             try:
                 open("Ссылки.txt", 'a')
             except:
-                print('[Ошибка] Не удаётся создать файл Ссылки.txt.\nСоздайте его вручную и/или настройте права доступа.\n')
+                print('[Ошибка] Не удалось создать файл Ссылки.txt.\nСоздайте его вручную и/или настройте права доступа.\n')
+                print('\nНажмите Enter, чтобы повторить попытку.')
+                wait_for_enter_key('')
                 continue
         inp = input()
         if inp:
@@ -99,17 +114,23 @@ def getHTML():
                 try:
                     open("Ссылки.txt", 'a')
                 except:
-                    print('[Ошибка] Не удаётся создать файл Ссылки.txt.\nСоздайте его вручную и/или настройте права доступа.\n')
+                    print('[Ошибка] Не удалось создать файл Ссылки.txt.\nСоздайте его вручную и/или настройте права доступа.\n')
+                    print('\nНажмите Enter, чтобы повторить попытку.')
+                    wait_for_enter_key('')
                     continue
             print('Проверяю ссылки...')
             try:
                 urls = [line.strip('\n').strip() for line in open('Ссылки.txt', encoding='utf-8')]
             except UnicodeDecodeError:
-                print('[Ошибка] Не удаётся прочитать файл Ссылки.txt, так как его кодировка не поддерживается.')
+                print('[Ошибка] Не удалось прочитать файл Ссылки.txt, так как его кодировка не поддерживается.')
                 print('Пожалуйста, сохраните файл в Unicode (UTF-8) и попробуйте снова.\n')
+                print('\nНажмите Enter, чтобы повторить попытку.')
+                wait_for_enter_key('')
                 continue
             except:
-                print('[Ошибка] Не удаётся открыть файл Ссылки.txt.\nУбедитесь, что у вас есть права на его чтение.\n')
+                print('[Ошибка] Не удалось открыть файл Ссылки.txt.\nУбедитесь, что у вас есть права на его чтение.\n')
+                print('\nНажмите Enter, чтобы повторить попытку.')
+                wait_for_enter_key('')
                 continue
         i = 0
         if not urls:
@@ -128,7 +149,7 @@ def getHTML():
                 print('Попробуйте ещё раз.\n')
                 break
             try:
-                html = list(str(bs(requests.get(url).content.decode(), features='html.parser')).split('\n'))
+                html = list(str(bs(requests.get(url, proxies=get_proxy_obj()).content.decode(), features='html.parser')).split('\n'))
                 htmlList.append([url, html])
             except Exception as e:
                 print('[Ошибка] Не удалось открыть URL:', url)
@@ -198,7 +219,7 @@ def download(imgNumber, imgUrl):
         else:
             while True:
                 try:
-                    temp_imgData = requests.get(imgUrl, timeout=timeout)
+                    temp_imgData = requests.get(imgUrl, timeout=timeout, proxies=get_proxy_obj())
                     retries = 0
                 except Exception as e:
                     if retries > retry:
@@ -210,7 +231,7 @@ def download(imgNumber, imgUrl):
                 break
             if timedOutError:
                 timedOutError = False
-                errorCode = 'Не удалось установить соединение или время на подключение истекло. Если сайт с исходным изображением заблокирован в вашей стране, включите VPN и запустите скрипт ещё раз'
+                errorCode = 'Не удалось установить соединение или время на подключение истекло. Если сайт с исходным изображением заблокирован в вашей стране, настройте прокси или включите VPN, затем запустите скрипт ещё раз'
                 success = False
                 raise ValueError()
             extension = guessImageType(temp_imgData.content)
@@ -226,7 +247,7 @@ def download(imgNumber, imgUrl):
         except FileNotFoundError:
             while True:
                 try:
-                    if not temp_imgData: imgData = requests.get(imgUrl, timeout=timeout)
+                    if not temp_imgData: imgData = requests.get(imgUrl, timeout=timeout, proxies=get_proxy_obj())
                     else: imgData = temp_imgData
                     retries = 0
                 except:
@@ -239,18 +260,21 @@ def download(imgNumber, imgUrl):
                 break
             if timedOutError:
                 timedOutError = False
-                errorCode = 'Не удалось установить соединение или время на подключение истекло. Если сайт с исходным изображением заблокирован в вашей стране, включите VPN и запустите скрипт ещё раз'
+                errorCode = 'Не удалось установить соединение или время на подключение истекло. Если сайт с исходным изображением заблокирован в вашей стране, настройте прокси или включите VPN, затем запустите скрипт ещё раз'
                 success = False
             else:
                 if imgData.status_code == 200:
                     if b'html' not in imgData.content:
-                        open(f'Загрузки/{folderName}/{imgNumber:03d}.{extension}', 'wb').write(imgData.content)
+                        try:
+                            open(f'Загрузки/{folderName}/{imgNumber:03d}.{extension}', 'wb').write(imgData.content)
+                        except Exception:
+                            errorCode = 'Can\'t save image to \'{}\' file'.format(os.path.abspath(f'Downloads/{folderName}/{imgNumber:03d}.{extension}'))
                         success = True
                     else:
                         errorCode = 'Получен неверный тип файла от сервера'
                         success = False
                 else:
-                    errorCode = f"Код состояния HTTP: {imgData.status_code}"
+                    errorCode = f'Код состояния HTTP: {imgData.status_code}'
                     success = False
             
             if success:
@@ -320,13 +344,17 @@ def main():
                     data = re.split('<|>', line)
                     if metadataLocation == 1:
                         metadataPath = f'Загрузки/{folderName}.txt'
-                        try: os.remove(f'Загрузки/{folderName} [ОШИБКА].txt')
-                        except OSError: pass
+                        metadataPathError = f'Загрузки/{folderName} [ОШИБКА].txt'
+                        if os.path.isfile(metadataPathError):
+                            try: os.remove(metadataPathError)
+                            except OSError: pass
                     elif metadataLocation == 2:
                         metadataPath = f'Загрузки/{folderName}/[Метаданные].txt'
-                        try: os.remove(f'Загрузки/{folderName}/[Метаданные] [ОШИБКА].txt')
-                        except OSError: pass
-                    else: metadataPath = False
+                        metadataPathError = f'Загрузки/{folderName}/[Метаданные] [ОШИБКА].txt'
+                        if os.path.isfile(metadataPathError):
+                            try: os.remove(metadataPathError)
+                            except OSError: pass
+                    else: metadataPath = None
                     for item in data:
                         if 'img src=' in item:
                             try:
@@ -365,13 +393,17 @@ def main():
                         data = re.split('<|>', line)
                         if metadataLocation == 1:
                             metadataPath = f'Загрузки/{folderName}.txt'
-                            try: os.remove(f'Загрузки/{folderName} [ОШИБКА].txt')
-                            except OSError: pass
+                            metadataPathError = f'Загрузки/{folderName} [ОШИБКА].txt'
+                            if os.path.isfile(metadataPathError):
+                                try: os.remove(metadataPathError)
+                                except OSError: pass
                         elif metadataLocation == 2:
                             metadataPath = f'Загрузки/{folderName}/[Метаданные].txt'
-                            try: os.remove(f'Загрузки/{folderName}/[Метаданные] [ОШИБКА].txt')
-                            except OSError: pass
-                        else: metadataPath = False
+                            metadataPathError = f'Загрузки/{folderName}/[Метаданные] [ОШИБКА].txt'
+                            if os.path.isfile(metadataPathError):
+                                try: os.remove(metadataPathError)
+                                except OSError: pass
+                        else: metadataPath = None
                         for item in data:
                             if 'img' in item and 'src=' in item and 'version' not in item:
                                 try:
@@ -397,12 +429,15 @@ def main():
             continue
 
         if (len(imgs)) > 0:
-            path('Загрузки/' + folderName).mkdir(parents=True, exist_ok=True)
+            try:
+                path('Загрузки/' + folderName).mkdir(parents=True, exist_ok=True)
+            except Exception:
+                print('Не удалось создать/открыть папку \'{}\''.format(os.path.abspath('Загрузки/' + folderName)))
 
             try:
                 if metadataPath:
                     with open(metadataPath, 'w', encoding='utf-8') as metadata:
-                        metadata.write(f"""В данный момент выполняется скачивание изображений... 
+                        metadata.write(f"""В данный момент выполняется скачивание изображений...
 Вы можете следить за процессом скачивания в окне командной строки.
 
 
@@ -410,7 +445,7 @@ def main():
 
 В первом случае просто запусти скрипт ещё раз, а во втором случае нужно отправить разработчику файл "error_log.txt", который находится в папке "Загрузки".""")
             except:
-                print('[Ошибка] Не удаётся записать метаданные.')
+                print('[Ошибка] Не удалось записать метаданные.')
                 return
 
             this_count = len(imgs)
@@ -431,9 +466,10 @@ def main():
             
             print(f'     Загружено {this_successful} изображений, ошибок: {this_failed}, пропущено: {this_skipped}')
 
-            if metadataPath:
-                with open(metadataPath, 'w', encoding='utf-8') as metadata:
-                    metadata.write(f"""Скачано с помощью Telegraph Image Downloader от ARTEZON
+            try:
+                if metadataPath:
+                    with open(metadataPath, 'w', encoding='utf-8') as metadata:
+                        metadata.write(f"""Скачано с помощью Telegraph Image Downloader от ARTEZON
 
 Источник: {url}
 
@@ -442,16 +478,23 @@ def main():
 Описание: {description}
 
 Число изображений: {len(imgs)}""")
+            except:
+                print('[Ошибка] Не удалось записать метаданные.')
+                return
 
                 if failedList:
-                    print("     " + errorCode)
-                    with open(metadataPath, 'a', encoding='utf-8') as metadata:
-                        metadata.write('\n\nСледующие изображения не были скачаны:')
-                        for i in failedList:
-                            metadata.write('\n' + str(i))
-                        metadata.write('\nСкачайте их вручную или попробуйте запустить скрипт ещё раз.')
-                    if metadataLocation == 1: os.rename(f'Загрузки/{folderName}.txt', f'Загрузки/{folderName} [ОШИБКА].txt')
-                    elif metadataLocation == 2: os.rename(f'Загрузки/{folderName}/[Metadata].txt', f'Загрузки/{folderName}/[Метаданные] [ОШИБКА].txt')
+                    print("     Последняя ошибка: " + errorCode)
+                    try:
+                        if metadataPath:
+                            with open(metadataPath, 'a', encoding='utf-8') as metadata:
+                                metadata.write('\n\nСледующие изображения не были скачаны:')
+                                for i in failedList:
+                                    metadata.write('\n' + str(i))
+                                metadata.write('\nСкачайте их вручную или попробуйте запустить скрипт ещё раз.')
+                            os.rename(metadataPath, metadataPathError)
+                    except:
+                        print('[Ошибка] Не удалось записать метаданные.')
+                        return
         else:
             print('     Нет изображений!')
 
@@ -460,6 +503,11 @@ def main():
 
 if platform == 'win32':
     os.system('title Telegraph Image Downloader')
+    if os.getcwd().lower() == os.path.join('C:', os.sep, 'Windows', 'system32').lower():
+        print('Пожалуйста, запустите программу из другой директории.')
+        print('\nДля продолжения нажмите Enter.')
+        wait_for_enter_key('')
+        os._exit(0)
 while True:
     try:
         os.system('cls' if platform == 'win32' else 'clear')
