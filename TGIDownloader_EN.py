@@ -504,13 +504,10 @@ Number of images: {len(imgs)}""")
 if platform == 'win32':
     os.system('title Telegraph Image Downloader')
     if os.getcwd().lower() == os.path.join('C:', os.sep, 'Windows', 'system32').lower():
-        try:
-            os.chdir(os.path.dirname(os.path.abspath(__file__)))
-        except Exception:
-            print('Please run the program from another directory.')
-            print('\nPress Enter to exit.')
-            wait_for_enter_key('')
-            os._exit(0)
+        print('Please run the program from another directory.')
+        print('\nPress Enter to exit.')
+        wait_for_enter_key('')
+        os._exit(0)
 while True:
     try:
         os.system('cls' if platform == 'win32' else 'clear')
