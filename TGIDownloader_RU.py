@@ -34,11 +34,11 @@ proxy = None
 # --------------------------------------------------
 
 
-from subprocess import call, check_call, DEVNULL, STDOUT
 from getpass import getpass as wait_for_enter_key
 from sys import platform, executable
 from pathlib import Path as path
 from traceback import format_exc
+from subprocess import run
 from html import unescape
 from time import sleep
 import threading
@@ -46,10 +46,12 @@ import mimetypes
 import re
 import os
 
+# remove-from-build BEGIN
 try:
     import requests
     from bs4 import BeautifulSoup as bs
 except ModuleNotFoundError:
+    from subprocess import DEVNULL, STDOUT
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         print('Пожалуйста, подождите, пока устанавливаются необходимые библиотеки для работы скрипта...')
@@ -57,7 +59,7 @@ except ModuleNotFoundError:
         try:
             for module_index, module in enumerate(requirements):
                 print(f'Установка {module} ({module_index + 1} of {len(requirements)})...')
-                check_call([executable, "-m", "pip", "install", module], stdout=DEVNULL, stderr=STDOUT)
+                run([executable, "-m", "pip", "install", module], check=True, stdout=DEVNULL, stderr=STDOUT)
             import requests
             from bs4 import BeautifulSoup as bs
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -69,6 +71,11 @@ except ModuleNotFoundError:
                 print(f'     {module}')
             print('\nНажмите Enter, чтобы повторить попытку.')
             wait_for_enter_key('')
+# remove-from-build END
+# add-to-build BEGIN
+# import requests
+# from bs4 import BeautifulSoup as bs
+# add-to-build END
 
 
 def get_proxy_obj():
@@ -527,5 +534,5 @@ while True:
             else:
                 print('Произошла непредвиденная ошибка. Отправьте содержимое файла "Загрузки/error_log.txt" разработчику.')
                 opener = 'open' if platform == 'darwin' else 'xdg-open'
-                call([opener, 'Загрузки/error_log.txt'])
+                run([opener, 'Загрузки/error_log.txt'])
         wait_for_enter_key('')
