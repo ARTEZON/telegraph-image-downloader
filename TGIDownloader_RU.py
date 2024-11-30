@@ -2,7 +2,7 @@
 # Автор: ARTEZON
 # Github: https://github.com/ARTEZON
 #
-# Версия 1.2.5
+# Версия 1.2.6
 #
 # --------------------------------------------------
 # -= НАСТРОЙКИ =-
@@ -89,7 +89,7 @@ def get_proxy_obj():
 
 def getHTML():
     print('''
----===( Telegraph Image Downloader v1.2.5 от ARTEZON )===---
+---===( Telegraph Image Downloader v1.2.6 от ARTEZON )===---
 
 Чтобы скачать картинки из одной статьи,
 скопируйте ссылку, вставьте её в это окно
@@ -460,14 +460,16 @@ def main():
             threading.Thread(target=printPercentage).start()
 
             imgNumber = 0
+            imgThreads = []
             for imgUrl in imgs:
                 imgNumber += 1
-                exec(f'img{imgNumber} = threading.Thread(target=download, args=(imgNumber, imgUrl,))')
-                exec(f'img{imgNumber}.start()')
+                imgThread = threading.Thread(target=download, args=(imgNumber, imgUrl,))
+                imgThreads.append(imgThread)
+                imgThread.start()
                 while downloading >= max_simultaneous_downloads: sleep(0.1)
 
-            for n in range(len(imgs)):
-                exec(f'img{n + 1}.join()')
+            for thread in imgThreads:
+                thread.join()
 
             stop = True
             

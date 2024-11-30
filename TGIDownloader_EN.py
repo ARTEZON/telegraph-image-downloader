@@ -2,7 +2,7 @@
 # Author: ARTEZON
 # Github: https://github.com/ARTEZON
 #
-# Version 1.2.5
+# Version 1.2.6
 #
 # --------------------------------------------------
 # -= SETTINGS =-
@@ -89,7 +89,7 @@ def get_proxy_obj():
 
 def getHTML():
     print('''
----===( Telegraph Image Downloader v1.2.5 by ARTEZON )===---
+---===( Telegraph Image Downloader v1.2.6 by ARTEZON )===---
 
 To download pictures from one article,
 copy the URL and paste it into this window
@@ -460,14 +460,16 @@ In the first case, just run the script again. Otherwise, you should send the "er
             threading.Thread(target=printPercentage).start()
 
             imgNumber = 0
+            imgThreads = []
             for imgUrl in imgs:
                 imgNumber += 1
-                exec(f'img{imgNumber} = threading.Thread(target=download, args=(imgNumber, imgUrl,))')
-                exec(f'img{imgNumber}.start()')
+                imgThread = threading.Thread(target=download, args=(imgNumber, imgUrl,))
+                imgThreads.append(imgThread)
+                imgThread.start()
                 while downloading >= max_simultaneous_downloads: sleep(0.1)
 
-            for n in range(len(imgs)):
-                exec(f'img{n + 1}.join()')
+            for thread in imgThreads:
+                thread.join()
 
             stop = True
             
